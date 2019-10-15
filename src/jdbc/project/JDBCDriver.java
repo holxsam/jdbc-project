@@ -3,11 +3,13 @@ package jdbc.project;
 import java.sql.*;
 import java.util.Scanner;
 
-/**
- *
- * @author Mimi Opkins with some tweaking from Dave Brown
- */
 public class JDBCDriver {
+    // LINE_LENGTH controls how many '-' are printed
+    static final int LINE_LENGTH = 100;
+    
+    // scanner variable used for user input:
+    static Scanner in = new Scanner(System.in);
+    
     //  Database credentials
     static String USER;
     static String PASS;
@@ -19,10 +21,11 @@ public class JDBCDriver {
     //The "s" denotes that it's a string.  All of our output in this test are
     //strings, but that won't always be the case.
     static final String displayFormat="%-5s%-15s%-15s%-15s\n";
-// JDBC driver name and database URL
+    
+    // JDBC driver name and database URL
     static final String JDBC_DRIVER = "org.apache.derby.jdbc.ClientDriver";
     static String DB_URL = "jdbc:derby://localhost:1527/";
-//            + "testdb;user=";
+
 /**
  * Takes the input string and outputs "N/A" if the string is empty or null.
  * @param input The string to be mapped.
@@ -35,22 +38,60 @@ public class JDBCDriver {
         else
             return input;
     }
+    
+    /**
+     * Prints out a line of dashes (-)
+     * @param count the number of times that a dash (-) will be printed
+     */
+    public static void line(int count){
+        for (int i = 0; i < count; i++) {
+            System.out.print("-");
+        }
+        System.out.println();
+    }
+        
+    /**
+     * Prompts the user to press [ENTER]. This function basically gives the user
+     * time to read the results of their action.
+     */
+    public static void displayContinueMessage(){
+        System.out.print(">>> Please press [ENTER] to continue back to main menu: ");
+        in.nextLine();
+    }
+    
+    public static void displayMenu(){
+        line(LINE_LENGTH);
+        System.out.println("    MAIN MENU");
+        line(LINE_LENGTH);
+        System.out.println(" 0. Exit");
+        System.out.println(" 1. List all writing groups");
+        System.out.println(" 2. List all the data for a group specified by the user");
+        System.out.println(" 3. List all publishers");
+        System.out.println(" 4. List all the data for a pubisher specified by the user");
+        System.out.println(" 5. List all book titles");
+        System.out.println(" 6. List all the data for a single book specified by the user");
+        System.out.println(" 7. Insert a new book");
+        System.out.println(" 8. Insert a new publisher and update all book published by one publisher to be published by the new pubisher");
+        System.out.println(" 9. Remove a single book specified by the user");
+        line(LINE_LENGTH);
+    }
 
     public static void main(String[] args) {
-        //Prompt the user for the database name, and the credentials.
-        //If your database has no credentials, you can update this code to
-        //remove that from the connection string.
-        Scanner in = new Scanner(System.in);
-        System.out.print("Name of the database (not the user account): ");
+        line(LINE_LENGTH);
+        System.out.print(">>> Name of the database: ");
         DBNAME = in.nextLine();
-        System.out.print("Database user name: ");
+        System.out.print(">>> Database username: ");
         USER = in.nextLine();
-        System.out.print("Database password: ");
+        System.out.print(">>> Database password: ");
         PASS = in.nextLine();
+        
         //Constructing the database URL connection string
         DB_URL = DB_URL + DBNAME + ";user="+ USER + ";password=" + PASS;
+
         Connection conn = null; //initialize the connection
-        Statement stmt = null;  //initialize the statement that we're using
+        PreparedStatement pstmt = null;  //used for statements that require user input
+        Statement stmt = null; // used for statements that do not require user input
+        
         try {
             //STEP 2: Register JDBC driver
             Class.forName("org.apache.derby.jdbc.ClientDriver");
@@ -60,28 +101,67 @@ public class JDBCDriver {
             conn = DriverManager.getConnection(DB_URL);
 
             //STEP 4: Execute a query
-            System.out.println("Creating statement...");
-            stmt = conn.createStatement();
-            String sql;
-            sql = "SELECT au_id, au_fname, au_lname, phone FROM Authors";
-            ResultSet rs = stmt.executeQuery(sql);
+            boolean done = false;
+            while(!done){
+                displayMenu();
 
-            //STEP 5: Extract data from result set
-            System.out.printf(displayFormat, "ID", "First Name", "Last Name", "Phone #");
-            while (rs.next()) {
-                //Retrieve by column name
-                String id = rs.getString("au_id");
-                String phone = rs.getString("phone");
-                String first = rs.getString("au_fname");
-                String last = rs.getString("au_lname");
+                System.out.print(">>> Enter in your choice [0-9]: ");
+                
+                int choice = 0;
+                try{
+                    choice = in.nextInt();
+                }
+                catch(java.util.InputMismatchException e){
+                    System.out.println("!!! Sorry we don't support character string input for menu choices!");
+                    choice = 1540; // meaning the user has to try again.
+                }
+                in.nextLine(); // eats newline
 
-                //Display values
-                System.out.printf(displayFormat,
-                        dispNull(id), dispNull(first), dispNull(last), dispNull(phone));
+                switch (choice) {
+                    case 0: 
+                        done = true;
+                        System.out.println(">>> BYE ~");
+                        line(LINE_LENGTH);
+                        break;
+                    case 1:
+                     
+//                        listAllWritingGroups(conn, stmt);
+                        break;
+                    case 2:
+//                        listAllDataForSpecificGroup(conn, pstmt);
+                        break;
+                    case 3:
+//                        listAllPublishers(conn, stmt);
+                        break;
+                    case 4:
+//                        listAllDataForSpecificPublisher(conn, pstmt);
+                        break;
+                    case 5:
+//                        listAllBooks(conn, stmt);
+                        break;
+                    case 6:
+//                        listAllDataForSpecificBook(conn, pstmt);
+                        break;
+                    case 7:
+//                        boolean insertSuccess = insertNewBook(conn, pstmt);
+//                        System.out.println("<<< Insert Complete: " + insertSuccess);
+                        line(LINE_LENGTH);
+                        break;
+                    case 8:
+//                        boolean replaceSuccess = replacePublisher(conn, pstmt);
+//                        System.out.println("<<< Replace Complete: " + replaceSuccess);
+                        line(LINE_LENGTH);
+                        break;
+                    case 9:
+//                        boolean deletionSuccess = removeBook(conn, pstmt);
+//                        System.out.println("<<< Deletion Complete: " + deletionSuccess);
+                        line(LINE_LENGTH);
+                        break;
+                    default:
+                        System.out.println("!!! INVALID INPUT, TRY AGAIN.");
+                }
+                if(choice != 0) displayContinueMessage();
             }
-            //STEP 6: Clean-up environment
-            rs.close();
-            stmt.close();
             conn.close();
         } catch (SQLException se) {
             //Handle errors for JDBC
