@@ -59,6 +59,12 @@ public class JDBCDriver {
         in.nextLine();
     }
     
+    public static void listAllWritingGroups()
+    {
+        System.out.println();
+        
+    }
+    
     public static void displayMenu(){
         line(LINE_LENGTH);
         System.out.println("    MAIN MENU");
