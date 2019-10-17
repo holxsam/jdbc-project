@@ -50,7 +50,8 @@ INSERT INTO Publishers(PublisherName, PublisherAddress, PublisherPhone, Publishe
 values
 ('Amulet','2010 Wimpy Ave','562-892-1111','Oldbook@gmail.com'),
 ('Wikipedia','100 BestWebsite Ave','951-420-4242','KnowItAll@Yahoo.net'),
-('Bloomsbury','4221 Random Drive','425-100-1010','HagridRules@msn.com');
+('Bloomsbury','4221 Random Drive','425-100-1010','HagridRules@msn.com'),
+('Bloossmsbury','4221 RD Drive','425-452-1010','re@msn.com');
 
 
 INSERT INTO Books(BookTitle, GroupName, PublisherName, YearPublished, NumberPages)
