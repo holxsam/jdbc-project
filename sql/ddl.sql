@@ -43,7 +43,11 @@ ALTER TABLE Books
 
 INSERT INTO WritingGroups(GroupName, HeadWriter, YearFormed, Subject)
 values
-('JK Authors','J K Rowling','1998','Fantasy');
+('JK Authors','J K Rowling','1998','Fantasy'),
+('Wiki Group','Vickie Peedea','1995','information'),
+('Wimpy Greg','Rodrick Rules','2000','Comedy'),
+('Old Bookies','Dr Wilcox','1995','Fiction'),
+('Derpy','KidJRod','1940','Fiction');
 
 
 INSERT INTO Publishers(PublisherName, PublisherAddress, PublisherPhone, PublisherEmail)
@@ -51,13 +55,24 @@ values
 ('Amulet','2010 Wimpy Ave','562-892-1111','Oldbook@gmail.com'),
 ('Wikipedia','100 BestWebsite Ave','951-420-4242','KnowItAll@Yahoo.net'),
 ('Bloomsbury','4221 Random Drive','425-100-1010','HagridRules@msn.com'),
-('Bloossmsbury','4221 RD Drive','425-452-1010','re@msn.com');
+('Literature','35 Learning Ave','213-345-6543','Literature@cool.com'),
+('Salinger Books','1600 Salinger Blvd','800-588-2300','salinger@yahoo.com'),
+('Blue Creek Novels','436 Blue Creek Rd', '911-119-1919','bluecreek@gmail.net');
 
 
 INSERT INTO Books(BookTitle, GroupName, PublisherName, YearPublished, NumberPages)
 values
 ('Harry Potter And The Sorcerers Stone','JK Authors','Bloomsbury','1998',309),
-('Diary of a Wimpy Kid', 'Jeff Kinney', 'Amulet', '2007', 109);
+('Harry Potter And The Chamber of Secrets','JK Authors','Bloomsbury','1999',379),
+('Front Page','Wiki Group','Wikipedia','1999',96),
+('Dictionary','Wiki Group','Wikipedia','1999',900),
+('Diary of a Wimpy Kid', 'WimpyGreg', 'Amulet', '2007', 109),
+('The Great Gatsby','Old Bookies','Literature','1995',180),
+('The Catcher in the Rye','Old Bookies','Salinger Books','1951',277),
+('Nine Stories','Derpy','Salinger Books','1953',277),
+('To Kill a Mockingbird','Derpy', 'Blue Creek Pubs','1960',323);
+
+
 
 
 
