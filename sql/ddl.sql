@@ -66,11 +66,11 @@ values
 ('Harry Potter And The Chamber of Secrets','JK Authors','Bloomsbury','1999',379),
 ('Front Page','Wiki Group','Wikipedia','1999',96),
 ('Dictionary','Wiki Group','Wikipedia','1999',900),
-('Diary of a Wimpy Kid', 'WimpyGreg', 'Amulet', '2007', 109),
+('Diary of a Wimpy Kid', 'Wimpy Greg', 'Amulet', '2007', 109),
 ('The Great Gatsby','Old Bookies','Literature','1995',180),
 ('The Catcher in the Rye','Old Bookies','Salinger Books','1951',277),
 ('Nine Stories','Derpy','Salinger Books','1953',277),
-('To Kill a Mockingbird','Derpy', 'Blue Creek Pubs','1960',323);
+('To Kill a Mockingbird','Derpy', 'Blue Creek Novels','1960',323);
 
 
 
