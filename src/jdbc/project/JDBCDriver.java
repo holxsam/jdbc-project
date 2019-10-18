@@ -83,7 +83,7 @@ public class JDBCDriver {
         System.out.println();
     }
     
-    public static void listAllDataForSpecificGroup(Connection conn) throws SQLException{
+    public static void listAllDataForSpecificGroup(Connection conn, PreparedStatement pstmt) throws SQLException{
         String displayFormat = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n"; // I'll fix formatting later (gotta fix VARCHARS in the SQL first)
 
         System.out.print(">>> Enter in a GROUP NAME: ");
@@ -92,7 +92,7 @@ public class JDBCDriver {
         String sql = "SELECT * from Books natural join Publishers natural join WritingGroups where groupname = ?";
         
         // create a PreparedStatement object since we have user input for our query:
-        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt = conn.prepareStatement(sql);
         pstmt.setString(1, groupnameInput); // 1 represents the first '?' in the sql; groupnameInput is what that '?' get replaced by
         
         // create result set: 
@@ -151,8 +151,8 @@ public class JDBCDriver {
         DB_URL = DB_URL + DBNAME + ";user="+ USER + ";password=" + PASS;
 
         Connection conn = null; //initialize the connection; use this variable as input for your functions
-//        PreparedStatement pstmt = null;  //used for statements that require user input
-//        Statement stmt = null; // used for statements that do not require user input
+        PreparedStatement pstmt = null;  //used for statements that require user input
+        Statement stmt = null; // used for statements that do not require user input
         
         try {
             //STEP 2: Register JDBC driver
@@ -191,7 +191,12 @@ public class JDBCDriver {
                         break;
                     case 2:
                         // pass in the connection to your functions then work with the connection inside your function
-                        listAllDataForSpecificGroup(conn);
+                        listAllDataForSpecificGroup(conn, pstmt);
+                        // the reason for passing in connection is obvs, we need to refence our database
+                        // the reason for passing in a PreparedStatement or Statement object is less obvs
+                        // we need it for exception handling within the functions 
+                        // since our functions will be throwing exceptions we need to handle them here (in main())
+                        // so we need a reference to the statement in case it throws an exception withIN our function
                         break;
                     case 3:
 //                        listAllPublishers(conn, stmt);
