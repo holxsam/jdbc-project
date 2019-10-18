@@ -59,12 +59,6 @@ public class JDBCDriver {
         in.nextLine();
     }
     
-    public static void listAllWritingGroups()
-    {
-        System.out.println();
-        
-    }
-    
     public static void displayMenu(){
         line(LINE_LENGTH);
         System.out.println("    MAIN MENU");
@@ -81,7 +75,69 @@ public class JDBCDriver {
         System.out.println(" 9. Remove a single book specified by the user");
         line(LINE_LENGTH);
     }
+    
+    //////// Put all required functions below here (but before main() obvsly) //////////
+    
+    public static void listAllWritingGroups()
+    {
+        System.out.println();
+    }
+    
+    public static void listAllDataForSpecificGroup(Connection conn) throws SQLException{
+        String displayFormat = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n"; // I'll fix formatting later (gotta fix VARCHARS in the SQL first)
 
+        System.out.print(">>> Enter in a GROUP NAME: ");
+        String groupnameInput = in.nextLine();
+        
+        String sql = "SELECT * from Books natural join Publishers natural join WritingGroups where groupname = ?";
+        
+        // create a PreparedStatement object since we have user input for our query:
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, groupnameInput); // 1 represents the first '?' in the sql; groupnameInput is what that '?' get replaced by
+        
+        // create result set: 
+        ResultSet rs = pstmt.executeQuery();
+        
+        // print out header for table:
+        line(LINE_LENGTH*3);
+        System.out.printf(displayFormat, "GroupName", "HeadWriter", "YearFormed", "Subject", "BookTitle", "YearPublished", "NumberPages", "PublisherName", "PublisherAddress", "PublisherPhone", "PublisherEmail");
+        line(LINE_LENGTH*3);
+        
+        // keeps track of the numOfRows in order to see if a row was even returned
+        int numOfRows = 0; 
+        
+        // go through result set:
+        while (rs.next()) {
+            numOfRows++;
+            
+            // Retrieve by column name
+            String groupname = dispNull(rs.getString("groupname"));
+            String headwriter = dispNull(rs.getString("headwriter"));
+            String yearformed = dispNull(Integer.toString(rs.getInt("yearformed")));
+            String subject = dispNull(rs.getString("subject"));
+            String booktitle = dispNull(rs.getString("booktitle"));
+            String yearpublished = dispNull(Integer.toString(rs.getInt("yearpublished")));
+            String numberpages = dispNull(Integer.toString(rs.getInt("numberpages")));
+            String publishername = dispNull(rs.getString("publishername"));
+            String publisheraddress = dispNull(rs.getString("publisheraddress"));
+            String publisherphone = dispNull(rs.getString("publisherphone"));
+            String publisheremail = dispNull(rs.getString("publisheremail"));
+
+            // Display values
+            System.out.printf(displayFormat, groupname, headwriter, yearformed, subject, booktitle, yearpublished, numberpages, publishername, publisheraddress, publisherphone, publisheremail);
+        }
+        if(numOfRows == 0) {
+            System.out.println(">>> No rows were returned for 'GROUP NAME'=" + groupnameInput);
+        }
+        line(LINE_LENGTH*3);
+        
+        // clean up environment:
+        rs.close();
+        pstmt.close();
+        
+        // DO NOT CLOSE the connection here or inside other functions (user might want to do more queries)
+    }
+    
     public static void main(String[] args) {
         line(LINE_LENGTH);
         System.out.print(">>> Name of the database: ");
@@ -94,9 +150,9 @@ public class JDBCDriver {
         //Constructing the database URL connection string
         DB_URL = DB_URL + DBNAME + ";user="+ USER + ";password=" + PASS;
 
-        Connection conn = null; //initialize the connection
-        PreparedStatement pstmt = null;  //used for statements that require user input
-        Statement stmt = null; // used for statements that do not require user input
+        Connection conn = null; //initialize the connection; use this variable as input for your functions
+//        PreparedStatement pstmt = null;  //used for statements that require user input
+//        Statement stmt = null; // used for statements that do not require user input
         
         try {
             //STEP 2: Register JDBC driver
@@ -134,8 +190,8 @@ public class JDBCDriver {
 //                        listAllWritingGroups(conn, stmt);
                         break;
                     case 2:
-                        // I'll do this back off 
-//                        listAllDataForSpecificGroup(conn, pstmt);
+                        // pass in the connection to your functions then work with the connection inside your function
+                        listAllDataForSpecificGroup(conn);
                         break;
                     case 3:
 //                        listAllPublishers(conn, stmt);
