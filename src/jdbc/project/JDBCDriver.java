@@ -78,11 +78,36 @@ public class JDBCDriver {
     
     //////// Put all required functions below here (but before main() obvsly) //////////
     
-    public static void listAllWritingGroups()
+    //////// Option 1 ///////////////
+    public static void listAllWritingGroups(Connection conn, PreparedStatement pstmt) throws SQLException
     {
+        String WRITING_DISPLAY_FORMAT = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n";
+        
+        System.out.println(">>> Downloading all Writing Groups \n");
+        
+        String sql =  "SELECT * FROM WritingGroups";
+        pstmt = conn.prepareStatement(sql);
+        
+        ResultSet rs = pstmt.executeQuery(sql);
+        
+        System.out.println("Writing Groups: ");
+        System.out.printf(WRITING_DISPLAY_FORMAT, "GroupName","HeadWriter","YearFormed", "Subject");
+        while(rs.next())
+        {
+            String name = rs.getString("GroupName");
+            String head = rs.getString("HeadWriter");
+            String year = rs.getString("YearFormed");
+            String subj = rs.getString("Subject");
+            
+            System.out.printf(WRITING_DISPLAY_FORMAT, dispNull(name), dispNull(head), dispNull(year), dispNull(subj));
+        }
+        
         System.out.println();
+        rs.close();
+        pstmt.close();
     }
     
+   ///////// Option 2 /////////////// 
     public static void listAllDataForSpecificGroup(Connection conn, PreparedStatement pstmt) throws SQLException{
         String displayFormat = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n"; // I'll fix formatting later (gotta fix VARCHARS in the SQL first)
 
@@ -131,12 +156,99 @@ public class JDBCDriver {
         }
         line(LINE_LENGTH*3);
         
+        rs.close();
+        pstmt.close();
+        
+    }
+    
+    ///////////// OPTION 3 ////////////////
+    public static void listAllPublishers(Connection conn, PreparedStatement pstmt) throws SQLException
+    {
+        String PUBLISHER_DISPLAY_FORMAT = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n";
+
+        System.out.println(">>> Downloading all Publishers \n");
+        
+        String sql =  "SELECT * FROM Publishers";
+        pstmt = conn.prepareStatement(sql);
+        
+        ResultSet rs = pstmt.executeQuery(sql);
+        
+        System.out.println("Publishers: ");
+        System.out.printf(PUBLISHER_DISPLAY_FORMAT, "PublisherName","PublisherAddress", "PublisherPhone", "PublisherEmail");
+        while(rs.next())
+        {
+            String name = rs.getString("GroupName");
+            String addr = rs.getString("PublisherAddress");
+            String phon = rs.getString("PublisherPhone");
+            String emai = rs.getString("PublisherEmail");
+            
+            System.out.printf(PUBLISHER_DISPLAY_FORMAT, dispNull(name), dispNull(addr), dispNull(phon), dispNull(emai));
+        }
+        System.out.println();
+        rs.close();
+        pstmt.close();
+    }
+///////////// OPTION 4 ////////////////
+public static void listAllDataForSpecificPublisher(Connection conn, PreparedStatement pstmt) throws SQLException
+{
+     String displayFormat = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n"; // I'll fix formatting later (gotta fix VARCHARS in the SQL first)
+
+        System.out.print(">>> Enter in a Publisher: ");
+        String publisherInput = in.nextLine();
+        
+        String sql = "SELECT * from Books natural join WritingGroups natural join Publishers where Publishers = ?";
+        
+        // create a PreparedStatement object since we have user input for our query:
+        pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, publisherInput); // 1 represents the first '?' in the sql; groupnameInput is what that '?' get replaced by
+        
+        // create result set: 
+        ResultSet rs = pstmt.executeQuery();
+        
+        // print out header for table:
+        line(LINE_LENGTH*3);
+        System.out.printf(displayFormat, "PublisherName", "PublisherAddress", "PublisherPhone", "PublisherEmail", "BookTitle", "YearPublished", "NumberPages", "GroupName", "HeadWriter", "YearFormed", "Subject");
+        line(LINE_LENGTH*3);
+        
+        // keeps track of the numOfRows in order to see if a row was even returned
+        int numOfRows = 0; 
+        
+        // go through result set:
+        while (rs.next()) {
+            numOfRows++;
+            
+            // Retrieve by column name
+            String PublisherName = dispNull(rs.getString("PublisherName"));
+            String PublisherAddress = dispNull(rs.getString("PublisherAddress"));
+            String PublisherPhone = dispNull(rs.getString("PublisherPhone"));
+            String PublisherEmail = dispNull(rs.getString("PublisherEmail"));
+            String BookTitle = dispNull(rs.getString("BookTitle"));
+            String YearPublished = dispNull(Integer.toString(rs.getInt("YearPublished")));
+            String NumberPages = dispNull(Integer.toString(rs.getInt("NumberPages")));
+            String GroupName = dispNull(rs.getString("GroupName"));
+            String HeadWriter = dispNull(rs.getString("HeadWriter"));
+            String YearFormed = dispNull(Integer.toString(rs.getInt("YearFormed")));
+            String Subject = dispNull(rs.getString("Subject"));
+
+            // Display values
+            System.out.printf(displayFormat, PublisherName, PublisherAddress, PublisherPhone, PublisherEmail, BookTitle, YearPublished, NumberPages, GroupName, HeadWriter, YearFormed, Subject);
+        }
+        if(numOfRows == 0) {
+            System.out.println(">>> No rows were returned for 'Publishers' = " + publisherInput);
+        }
+        line(LINE_LENGTH*3);
+        
         // clean up environment:
         rs.close();
         pstmt.close();
         
         // DO NOT CLOSE the connection here or inside other functions (user might want to do more queries)
-    }
+}
+
+
+    
+    
+    
     
     public static void main(String[] args) {
         line(LINE_LENGTH);
