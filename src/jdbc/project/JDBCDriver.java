@@ -1,11 +1,42 @@
 
 package jdbc.project;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class JDBCDriver {
     // LINE_LENGTH controls how many '-' are printed
     static final int LINE_LENGTH = 100;
+    
+    // ATTRIBUTE NAMES:
+    static final String ATTR_GROUPNAME = "GroupName";
+    static final String ATTR_HEADWRITER = "HeadWriter";
+    static final String ATTR_YEARFORMED = "YearFormed";
+    static final String ATTR_SUBJECT = "Subject";
+    static final String ATTR_PUBLISHERNAME = "PublisherName";
+    static final String ATTR_PUBLISHERADDRESS = "PublisherAddress";
+    static final String ATTR_PUBLISHERPHONE = "PublisherPhone";
+    static final String ATTR_PUBLISHEREMAIL = "PublisherEmail";
+    static final String ATTR_BOOKTITLE = "BookTitle";
+    static final String ATTR_YEARPUBLISHED = "YearPublished";
+    static final String ATTR_NUMBERPAGES = "NumberPages";
+    
+    
+    // MINIMUM LENGTHS FOR EACH ATTRIBUTE COLUMN (used for formatting the table output):
+    static final int MIN_LEN_GROUPNAME = 9;
+    static final int MIN_LEN_HEADWRITER = 10;
+    static final int MIN_LEN_YEARFORMED = 10;
+    static final int MIN_LEN_SUBJECT = 7;
+    static final int MIN_LEN_PUBLISHERNAME = 13;
+    static final int MIN_LEN_PUBLISHERADDR = 13;
+    static final int MIN_LEN_PUBLISHERPHONE = 14;
+    static final int MIN_LEN_PUBLISHEREMAIL = 14;
+    static final int MIN_LEN_BOOKTITLE = 9;
+    static final int MIN_LEN_YEARPUBLISHED = 13;
+    static final int MIN_LEN_NUMBERPAGES = 11;
+
     
     // scanner variable used for user input:
     static Scanner in = new Scanner(System.in);
@@ -76,40 +107,125 @@ public class JDBCDriver {
         line(LINE_LENGTH);
     }
     
+    /**
+     * getTableFormatString goes through the ResultSet rs in order to determine the maximum length a column should be
+     * @param rs - the result set
+     * @param attributeList - an arraylist of the attribute or columns you want to print
+     */
+    public static String getTableFormatString(ResultSet rs, ArrayList attributeList) throws SQLException{
+        Map<String, Integer> maxFormatLengthMap = new HashMap<>();
+        for (int i = 0; i < attributeList.size(); i++) {
+            String attribute = (String) attributeList.get(i);
+            int minLength = 0;
+            switch (attribute) {
+                case ATTR_GROUPNAME:
+                    minLength = MIN_LEN_GROUPNAME;
+                    break;
+                case ATTR_HEADWRITER:
+                    minLength = MIN_LEN_HEADWRITER;
+                    break;                    
+                case ATTR_YEARFORMED:
+                    minLength = MIN_LEN_YEARFORMED;
+                    break;                    
+                case ATTR_SUBJECT:
+                    minLength = MIN_LEN_SUBJECT;
+                    break;                    
+                case ATTR_PUBLISHERNAME:
+                    minLength = MIN_LEN_PUBLISHERNAME;
+                    break;                    
+                case ATTR_PUBLISHERADDRESS:
+                    minLength = MIN_LEN_PUBLISHERADDR;
+                    break;
+                case ATTR_PUBLISHERPHONE:
+                    minLength = MIN_LEN_PUBLISHERPHONE;
+                    break;                    
+                case ATTR_PUBLISHEREMAIL:
+                    minLength = MIN_LEN_PUBLISHEREMAIL;
+                    break;                    
+                case ATTR_BOOKTITLE:
+                    minLength = MIN_LEN_BOOKTITLE;
+                    break;
+                case ATTR_YEARPUBLISHED:
+                    minLength = MIN_LEN_YEARPUBLISHED;
+                    break;                    
+                case ATTR_NUMBERPAGES:
+                    minLength = MIN_LEN_NUMBERPAGES;
+                    break;                    
+                default:
+                    System.out.println("error");
+                    break;
+            }
+            maxFormatLengthMap.put(attribute, minLength);
+        }
+        
+        while(rs.next()){
+            for (int i = 0; i < attributeList.size(); i++) {
+                String attribute = (String) attributeList.get(i);
+                int length = rs.getString(attribute).length();
+                
+                if (length > maxFormatLengthMap.get(attribute)){
+                    maxFormatLengthMap.put(attribute, length);
+                }
+            }
+        }
+        
+        String format = "";
+        
+        for (int i = 0; i < attributeList.size(); i++) {
+            format += "%-";
+            Integer length = maxFormatLengthMap.get(attributeList.get(i)) + 2;
+            format += length.toString();
+            format += "s";
+        }
+        format += '\n';
+        System.out.println(format);
+        
+        rs.beforeFirst(); // resets result set
+        
+        return format;
+    }
+    
+    
     //////// Put all required functions below here (but before main() obvsly) //////////
     
     //////// Option 1 ///////////////
-    public static void listAllWritingGroups(Connection conn, PreparedStatement pstmt) throws SQLException
+    public static void listAllWritingGroups(Connection conn, Statement stmt) throws SQLException
     {
-        String WRITING_DISPLAY_FORMAT = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n";
-        
-        System.out.println(">>> Downloading all Writing Groups \n");
-        
+        // create query:
         String sql =  "SELECT * FROM WritingGroups";
-        pstmt = conn.prepareStatement(sql);
+        stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        ResultSet rs = stmt.executeQuery(sql);
         
-        ResultSet rs = pstmt.executeQuery(sql);
+        // creates the display format based on what attributes you add in the arraylist:
+        ArrayList<String> attributeList = new ArrayList<String>();
+        attributeList.add(ATTR_GROUPNAME);
+        attributeList.add(ATTR_HEADWRITER);
+        attributeList.add(ATTR_YEARFORMED);
+        attributeList.add(ATTR_SUBJECT);
+        String tableDisplayFormat = getTableFormatString(rs, attributeList);
         
-        System.out.println("Writing Groups: ");
-        System.out.printf(WRITING_DISPLAY_FORMAT, "GroupName","HeadWriter","YearFormed", "Subject");
+        // prints attribute headers:
+        line(LINE_LENGTH*3);
+        System.out.printf(tableDisplayFormat, ATTR_GROUPNAME, ATTR_HEADWRITER, ATTR_YEARFORMED, ATTR_SUBJECT);
+        line(LINE_LENGTH*3);
+
+        // iterates through the result set of the query in order to print the results
         while(rs.next())
         {
-            String name = rs.getString("GroupName");
-            String head = rs.getString("HeadWriter");
-            String year = rs.getString("YearFormed");
-            String subj = rs.getString("Subject");
+            String name = dispNull(rs.getString(ATTR_GROUPNAME));
+            String head = dispNull(rs.getString(ATTR_HEADWRITER));
+            String year = dispNull(rs.getString(ATTR_YEARFORMED));
+            String subj = dispNull(rs.getString(ATTR_SUBJECT));
             
-            System.out.printf(WRITING_DISPLAY_FORMAT, dispNull(name), dispNull(head), dispNull(year), dispNull(subj));
+            System.out.printf(tableDisplayFormat, name, head, year, subj);
         }
         
-        System.out.println();
         rs.close();
-        pstmt.close();
+        stmt.close();
     }
     
    ///////// Option 2 /////////////// 
     public static void listAllDataForSpecificGroup(Connection conn, PreparedStatement pstmt) throws SQLException{
-        String displayFormat = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n"; // I'll fix formatting later (gotta fix VARCHARS in the SQL first)
 
         System.out.print(">>> Enter in a GROUP NAME: ");
         String groupnameInput = in.nextLine();
@@ -117,15 +233,30 @@ public class JDBCDriver {
         String sql = "SELECT * from Books natural join Publishers natural join WritingGroups where groupname = ?";
         
         // create a PreparedStatement object since we have user input for our query:
-        pstmt = conn.prepareStatement(sql);
+        pstmt = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         pstmt.setString(1, groupnameInput); // 1 represents the first '?' in the sql; groupnameInput is what that '?' get replaced by
         
         // create result set: 
         ResultSet rs = pstmt.executeQuery();
         
+        // creates the display format based on what attributes you add in the arraylist:
+        ArrayList<String> attributeList = new ArrayList<String>();
+        attributeList.add(ATTR_GROUPNAME);
+        attributeList.add(ATTR_HEADWRITER);
+        attributeList.add(ATTR_YEARFORMED);
+        attributeList.add(ATTR_SUBJECT);
+        attributeList.add(ATTR_BOOKTITLE);
+        attributeList.add(ATTR_YEARPUBLISHED);
+        attributeList.add(ATTR_NUMBERPAGES);
+        attributeList.add(ATTR_PUBLISHERNAME);
+        attributeList.add(ATTR_PUBLISHERADDRESS);
+        attributeList.add(ATTR_PUBLISHERPHONE);
+        attributeList.add(ATTR_PUBLISHEREMAIL);
+        String tableDisplayFormat = getTableFormatString(rs, attributeList);
+        
         // print out header for table:
         line(LINE_LENGTH*3);
-        System.out.printf(displayFormat, "GroupName", "HeadWriter", "YearFormed", "Subject", "BookTitle", "YearPublished", "NumberPages", "PublisherName", "PublisherAddress", "PublisherPhone", "PublisherEmail");
+        System.out.printf(tableDisplayFormat, ATTR_GROUPNAME, ATTR_HEADWRITER, ATTR_YEARFORMED, ATTR_SUBJECT, ATTR_BOOKTITLE, ATTR_YEARPUBLISHED, ATTR_NUMBERPAGES, ATTR_PUBLISHERNAME, ATTR_PUBLISHERADDRESS, ATTR_PUBLISHERPHONE, ATTR_PUBLISHEREMAIL);
         line(LINE_LENGTH*3);
         
         // keeps track of the numOfRows in order to see if a row was even returned
@@ -149,7 +280,7 @@ public class JDBCDriver {
             String publisheremail = dispNull(rs.getString("publisheremail"));
 
             // Display values
-            System.out.printf(displayFormat, groupname, headwriter, yearformed, subject, booktitle, yearpublished, numberpages, publishername, publisheraddress, publisherphone, publisheremail);
+            System.out.printf(tableDisplayFormat, groupname, headwriter, yearformed, subject, booktitle, yearpublished, numberpages, publishername, publisheraddress, publisherphone, publisheremail);
         }
         if(numOfRows == 0) {
             System.out.println(">>> No rows were returned for 'GROUP NAME'=" + groupnameInput);
@@ -162,16 +293,16 @@ public class JDBCDriver {
     }
     
     ///////////// OPTION 3 ////////////////
-    public static void listAllPublishers(Connection conn, PreparedStatement pstmt) throws SQLException
+    public static void listAllPublishers(Connection conn, Statement stmt) throws SQLException
     {
         String PUBLISHER_DISPLAY_FORMAT = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n";
 
         System.out.println(">>> Downloading all Publishers \n");
         
         String sql =  "SELECT * FROM Publishers";
-        pstmt = conn.prepareStatement(sql);
+        stmt = conn.prepareStatement(sql);
         
-        ResultSet rs = pstmt.executeQuery(sql);
+        ResultSet rs = stmt.executeQuery(sql);
         
         System.out.println("Publishers: ");
         System.out.printf(PUBLISHER_DISPLAY_FORMAT, "PublisherName","PublisherAddress", "PublisherPhone", "PublisherEmail");
@@ -186,7 +317,7 @@ public class JDBCDriver {
         }
         System.out.println();
         rs.close();
-        pstmt.close();
+        stmt.close();
     }
 ///////////// OPTION 4 ////////////////
 public static void listAllDataForSpecificPublisher(Connection conn, PreparedStatement pstmt) throws SQLException
@@ -299,7 +430,7 @@ public static void listAllDataForSpecificPublisher(Connection conn, PreparedStat
                         break;
                     case 1:
                      
-//                        listAllWritingGroups(conn, stmt);
+                       listAllWritingGroups(conn, stmt);
                         break;
                     case 2:
                         // pass in the connection to your functions then work with the connection inside your function
@@ -311,10 +442,10 @@ public static void listAllDataForSpecificPublisher(Connection conn, PreparedStat
                         // so we need a reference to the statement in case it throws an exception withIN our function
                         break;
                     case 3:
-//                        listAllPublishers(conn, stmt);
+                       listAllPublishers(conn, stmt);
                         break;
                     case 4:
-//                        listAllDataForSpecificPublisher(conn, pstmt);
+                       listAllDataForSpecificPublisher(conn, pstmt);
                         break;
                     case 5:
 //                        listAllBooks(conn, stmt);
