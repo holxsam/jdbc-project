@@ -244,9 +244,91 @@ public static void listAllDataForSpecificPublisher(Connection conn, PreparedStat
         
         // DO NOT CLOSE the connection here or inside other functions (user might want to do more queries)
 }
+///////////// OPTION 5 /////////////
+public static void listAllBooks(Connection conn, PreparedStatement pstmt) throws SQLException
+    {
+        String BOOK_DISPLAY_FORMAT = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n";
+
+        System.out.println(">>> Downloading all Book \n");
+        
+        String sql =  "SELECT * FROM Books";
+        pstmt = conn.prepareStatement(sql);
+        
+        ResultSet rs = pstmt.executeQuery(sql);
+        
+        System.out.println("Books: ");
+        System.out.printf(BOOK_DISPLAY_FORMAT, "BookTitle","YearPublished", "NumberPages");
+        while(rs.next())
+        {
+            String BkTt = rs.getString("BookTitle");
+            String YRPB = rs.getString("YearPublished");
+            String NumP = rs.getString("NumberPages");
+            
+            System.out.printf(BOOK_DISPLAY_FORMAT, dispNull(BkTt), dispNull(YRPB), dispNull(NumP));
+        }
+        System.out.println();
+        rs.close();
+        pstmt.close();
+    }
+/////////////////// OPTION 6 ////////////////
+
+public static void listAllDataForSpecificBook(Connection conn, PreparedStatement pstmt) throws SQLException
+{
+     String displayFormat = "%-30s%-40s%-14s%-20s%-30s%-15s%-13s%-40s%-50s%-16s%-40s\n"; // I'll fix formatting later (gotta fix VARCHARS in the SQL first)
+
+        System.out.print(">>> Enter in a Book: ");
+        String bookInput = in.nextLine();
+        
+        String sql = "SELECT * from Books natural join WritingGroups natural join Publishers where Books = ?";
+        
+        // create a PreparedStatement object since we have user input for our query:
+        pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, bookInput); // 1 represents the first '?' in the sql; groupnameInput is what that '?' get replaced by
+        
+        // create result set: 
+        ResultSet rs = pstmt.executeQuery();
+        
+        // print out header for table:
+        line(LINE_LENGTH*3);
+        System.out.printf(displayFormat, "BookTitle", "YearPublished", "NumberPages", "GroupName", "HeadWriter", "YearFormed", "Subject", "PublisherName", "PublisherAddress", "PublisherPhone", "PublisherEmail");
+        line(LINE_LENGTH*3);
+        
+        // keeps track of the numOfRows in order to see if a row was even returned
+        int numOfRows = 0; 
+        
+        // go through result set:
+        while (rs.next()) {
+            numOfRows++;
+            
+            // Retrieve by column name
+            String BookTitle = dispNull(rs.getString("BookTitle"));
+            String YearPublished = dispNull(Integer.toString(rs.getInt("YearPublished")));
+            String NumberPages = dispNull(Integer.toString(rs.getInt("NumberPages")));
+            String GroupName = dispNull(rs.getString("GroupName"));
+            String HeadWriter = dispNull(rs.getString("HeadWriter"));
+            String YearFormed = dispNull(Integer.toString(rs.getInt("YearFormed")));
+            String Subject = dispNull(rs.getString("Subject"));
+            String PublisherName = dispNull(rs.getString("PublisherName"));
+            String PublisherAddress = dispNull(rs.getString("PublisherAddress"));
+            String PublisherPhone = dispNull(rs.getString("PublisherPhone"));
+            String PublisherEmail = dispNull(rs.getString("PublisherEmail"));
+
+            // Display values
+            System.out.printf(displayFormat, BookTitle, YearPublished, NumberPages, GroupName, HeadWriter, YearFormed, Subject, PublisherName, PublisherAddress, PublisherPhone, PublisherEmail);
+        }
+        if(numOfRows == 0) {
+            System.out.println(">>> No rows were returned for 'Books' = " + bookInput);
+        }
+        line(LINE_LENGTH*3);
+        
+        // clean up environment:
+        rs.close();
+        pstmt.close();
+        
+        // DO NOT CLOSE the connection here or inside other functions (user might want to do more queries)
+}
 
 
-    
     
     
     
