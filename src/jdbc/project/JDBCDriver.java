@@ -23,25 +23,23 @@ public class JDBCDriver {
     static final String ATTR_YEARPUBLISHED = "YearPublished";
     static final String ATTR_NUMBERPAGES = "NumberPages";
     
-    
     // MINIMUM LENGTHS FOR EACH ATTRIBUTE COLUMN (used for formatting the table output):
     static final int MIN_LEN_GROUPNAME = 9;
     static final int MIN_LEN_HEADWRITER = 10;
     static final int MIN_LEN_YEARFORMED = 10;
     static final int MIN_LEN_SUBJECT = 7;
     static final int MIN_LEN_PUBLISHERNAME = 13;
-    static final int MIN_LEN_PUBLISHERADDR = 13;
+    static final int MIN_LEN_PUBLISHERADDRESS = 16;
     static final int MIN_LEN_PUBLISHERPHONE = 14;
     static final int MIN_LEN_PUBLISHEREMAIL = 14;
     static final int MIN_LEN_BOOKTITLE = 9;
     static final int MIN_LEN_YEARPUBLISHED = 13;
     static final int MIN_LEN_NUMBERPAGES = 11;
 
-    
     // scanner variable used for user input:
     static Scanner in = new Scanner(System.in);
     
-    //  Database credentials
+    // Database credentials
     static String USER;
     static String PASS;
     static String DBNAME;
@@ -57,7 +55,7 @@ public class JDBCDriver {
     static final String JDBC_DRIVER = "org.apache.derby.jdbc.ClientDriver";
     static String DB_URL = "jdbc:derby://localhost:1527/";
 
-/**
+    /**
  * Takes the input string and outputs "N/A" if the string is empty or null.
  * @param input The string to be mapped.
  * @return  Either the input string or "N/A" as appropriate.
@@ -79,6 +77,25 @@ public class JDBCDriver {
             System.out.print("-");
         }
         System.out.println();
+    }
+    
+    /**
+     * prints a line of dashes (-) based on the format string that is used with printf()
+     * @param format the String that specificies the format
+     */
+    public static void lineFormat(String format) {
+        int totalLength = 0;
+        for (int i = 0; i < format.length(); i++) {
+            if (format.charAt(i) == (int)'-'){
+                String subLength = "";
+                while(format.charAt(i) != (int)'s'){
+                    subLength += format.charAt(i);
+                    i++;
+                }
+                totalLength += Math.abs(Integer.parseInt(subLength));
+            }
+        }
+        line(totalLength);
     }
         
     /**
@@ -134,7 +151,7 @@ public class JDBCDriver {
                     minLength = MIN_LEN_PUBLISHERNAME;
                     break;                    
                 case ATTR_PUBLISHERADDRESS:
-                    minLength = MIN_LEN_PUBLISHERADDR;
+                    minLength = MIN_LEN_PUBLISHERADDRESS;
                     break;
                 case ATTR_PUBLISHERPHONE:
                     minLength = MIN_LEN_PUBLISHERPHONE;
@@ -178,17 +195,97 @@ public class JDBCDriver {
             format += "s";
         }
         format += '\n';
-        System.out.println(format);
+//        System.out.println(format);
         
         rs.beforeFirst(); // resets result set
         
         return format;
     }
     
+    /**
+     * Ascertains if a specific book exists within the database.
+     * This query is case sensitive.
+     * @param booktitle the title of the book in question
+     * @param conn the connection to the database
+     * @return Returns true if book is found, false otherwise
+     * @throws SQLException 
+     */
+    public static boolean bookExists(String bookTitle, String groupName, Connection conn) throws SQLException{
+        boolean bookExists = false;
+        
+        String sql = "SELECT booktitle, groupname from Books WHERE booktitle = ? AND groupname = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, bookTitle);
+        pstmt.setString(2, groupName);
+
+        ResultSet rs = pstmt.executeQuery();
+        // if the result set has a row (therefore rs.next() returns true) then book exists
+        // if the result set has no rows (therefore rs.next() returns false) then book does not exist.
+        bookExists = rs.next(); 
+
+        rs.close();
+        pstmt.close();
+        return bookExists;
+    }
     
-    //////// Put all required functions below here (but before main() obvsly) //////////
+    public static boolean groupExists(String groupName, Connection conn) throws SQLException{
+        boolean groupExists = false;
+        
+        String sql = "SELECT groupname from WritingGroups WHERE groupname = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, groupName);
+
+        ResultSet rs = pstmt.executeQuery();
+        // if the result set has a row (therefore rs.next() returns true) then book exists
+        // if the result set has no rows (therefore rs.next() returns false) then book does not exist.
+        groupExists = rs.next(); 
+
+        rs.close();
+        pstmt.close();
+        return groupExists;
+    }
     
-    //////// Option 1 ///////////////
+    public static boolean publisherExists(String publisherName, Connection conn) throws SQLException{
+        boolean publisherExists = false;
+        
+        String sql = "SELECT publishername from Publishers WHERE publishername = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, publisherName);
+
+        ResultSet rs = pstmt.executeQuery();
+        // if the result set has a row (therefore rs.next() returns true) then book exists
+        // if the result set has no rows (therefore rs.next() returns false) then book does not exist.
+        publisherExists = rs.next(); 
+
+        rs.close();
+        pstmt.close();
+        return publisherExists;
+    }
+    
+    /**
+     * This function removes a publisher from the database.
+     * This assumes that the publishername DOES EXIST.
+     * @param conn
+     * @param pstmt
+     * @param publishernameInput
+     * @throws SQLException 
+     */
+    public static void removePublisher(Connection conn, PreparedStatement pstmt, String publishernameInput) throws SQLException{
+        
+        String sql = "DELETE from Publisher where publishername=?";
+        pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, publishernameInput);
+        
+        pstmt.executeUpdate();
+
+        // clean up environment:
+        pstmt.close();
+        
+    }
+    
+    ////////// Put all required functions below here (but before main() obvsly) //////////
+    
+    ////////// OPTION 1 //////////
     public static void listAllWritingGroups(Connection conn, Statement stmt) throws SQLException
     {
         // create query:
@@ -205,9 +302,10 @@ public class JDBCDriver {
         String tableDisplayFormat = getTableFormatString(rs, attributeList);
         
         // prints attribute headers:
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
         System.out.printf(tableDisplayFormat, ATTR_GROUPNAME, ATTR_HEADWRITER, ATTR_YEARFORMED, ATTR_SUBJECT);
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
+
 
         // iterates through the result set of the query in order to print the results
         while(rs.next())
@@ -219,15 +317,16 @@ public class JDBCDriver {
             
             System.out.printf(tableDisplayFormat, name, head, year, subj);
         }
-        
+        lineFormat(tableDisplayFormat);
+
         rs.close();
         stmt.close();
     }
     
-   ///////// Option 2 /////////////// 
+    ////////// OPTION 2 //////////
     public static void listAllDataForSpecificGroup(Connection conn, PreparedStatement pstmt) throws SQLException{
 
-        System.out.print(">>> Enter in a GROUP NAME: ");
+        System.out.print(">>> Enter in a group name for a WritingGroup: ");
         String groupnameInput = in.nextLine();
         
         String sql = "SELECT * from Books natural join Publishers natural join WritingGroups where groupname = ?";
@@ -255,9 +354,9 @@ public class JDBCDriver {
         String tableDisplayFormat = getTableFormatString(rs, attributeList);
         
         // print out header for table:
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
         System.out.printf(tableDisplayFormat, ATTR_GROUPNAME, ATTR_HEADWRITER, ATTR_YEARFORMED, ATTR_SUBJECT, ATTR_BOOKTITLE, ATTR_YEARPUBLISHED, ATTR_NUMBERPAGES, ATTR_PUBLISHERNAME, ATTR_PUBLISHERADDRESS, ATTR_PUBLISHERPHONE, ATTR_PUBLISHEREMAIL);
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
         
         // keeps track of the numOfRows in order to see if a row was even returned
         int numOfRows = 0; 
@@ -267,32 +366,31 @@ public class JDBCDriver {
             numOfRows++;
             
             // Retrieve by column name
-            String groupname = dispNull(rs.getString("groupname"));
-            String headwriter = dispNull(rs.getString("headwriter"));
-            String yearformed = dispNull(Integer.toString(rs.getInt("yearformed")));
-            String subject = dispNull(rs.getString("subject"));
-            String booktitle = dispNull(rs.getString("booktitle"));
-            String yearpublished = dispNull(Integer.toString(rs.getInt("yearpublished")));
-            String numberpages = dispNull(Integer.toString(rs.getInt("numberpages")));
-            String publishername = dispNull(rs.getString("publishername"));
-            String publisheraddress = dispNull(rs.getString("publisheraddress"));
-            String publisherphone = dispNull(rs.getString("publisherphone"));
-            String publisheremail = dispNull(rs.getString("publisheremail"));
+            String groupname = dispNull(rs.getString(ATTR_GROUPNAME));
+            String headwriter = dispNull(rs.getString(ATTR_HEADWRITER));
+            String yearformed = dispNull(Integer.toString(rs.getInt(ATTR_YEARFORMED)));
+            String subject = dispNull(rs.getString(ATTR_SUBJECT));
+            String booktitle = dispNull(rs.getString(ATTR_BOOKTITLE));
+            String yearpublished = dispNull(Integer.toString(rs.getInt(ATTR_YEARPUBLISHED)));
+            String numberpages = dispNull(Integer.toString(rs.getInt(ATTR_NUMBERPAGES)));
+            String publishername = dispNull(rs.getString(ATTR_PUBLISHERNAME));
+            String publisheraddress = dispNull(rs.getString(ATTR_PUBLISHERADDRESS));
+            String publisherphone = dispNull(rs.getString(ATTR_PUBLISHERPHONE));
+            String publisheremail = dispNull(rs.getString(ATTR_PUBLISHEREMAIL));
 
             // Display values
             System.out.printf(tableDisplayFormat, groupname, headwriter, yearformed, subject, booktitle, yearpublished, numberpages, publishername, publisheraddress, publisherphone, publisheremail);
         }
         if(numOfRows == 0) {
-            System.out.println(">>> No rows were returned for 'GROUP NAME'=" + groupnameInput);
+            System.out.println(">>> No rows were returned for 'groupName' = " + groupnameInput);
         }
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
         
         rs.close();
         pstmt.close();
-        
     }
     
-    ///////////// OPTION 3 ////////////////
+    ////////// OPTION 3 //////////
     public static void listAllPublishers(Connection conn, Statement stmt) throws SQLException
     {        
         String sql =  "SELECT * FROM Publishers";
@@ -308,9 +406,9 @@ public class JDBCDriver {
         String tableDisplayFormat = getTableFormatString(rs, attributeList);
         
         // prints attribute headers:
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
         System.out.printf(tableDisplayFormat, ATTR_PUBLISHERNAME, ATTR_PUBLISHERADDRESS, ATTR_PUBLISHERPHONE, ATTR_PUBLISHEREMAIL);
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
         
         // iterates through the result set of the query in order to print the results
         while(rs.next())
@@ -322,16 +420,16 @@ public class JDBCDriver {
             
             System.out.printf(tableDisplayFormat, name, addr, numb, emai);
         }
-
+        
+        lineFormat(tableDisplayFormat);
         rs.close();
         stmt.close();
     }
 
-        
-///////////// OPTION 4 ////////////////
-public static void listAllDataForSpecificPublisher(Connection conn, PreparedStatement pstmt) throws SQLException
-{
-        System.out.print(">>> Enter in a Publisher: ");
+    ////////// OPTION 4 //////////
+    public static void listAllDataForSpecificPublisher(Connection conn, PreparedStatement pstmt) throws SQLException
+    {
+        System.out.print(">>> Enter in a publisherName for a Publisher: ");
         String publishernameInput = in.nextLine();
         
         String sql = "SELECT * from Books natural join WritingGroups natural join Publishers where PublisherName = ?";
@@ -345,6 +443,10 @@ public static void listAllDataForSpecificPublisher(Connection conn, PreparedStat
         
         // creates the display format based on what attributes you add in the arraylist:
         ArrayList<String> attributeList = new ArrayList<String>();
+        attributeList.add(ATTR_PUBLISHERNAME);
+        attributeList.add(ATTR_PUBLISHERADDRESS);
+        attributeList.add(ATTR_PUBLISHERPHONE);
+        attributeList.add(ATTR_PUBLISHEREMAIL);
         attributeList.add(ATTR_GROUPNAME);
         attributeList.add(ATTR_HEADWRITER);
         attributeList.add(ATTR_YEARFORMED);
@@ -352,16 +454,12 @@ public static void listAllDataForSpecificPublisher(Connection conn, PreparedStat
         attributeList.add(ATTR_BOOKTITLE);
         attributeList.add(ATTR_YEARPUBLISHED);
         attributeList.add(ATTR_NUMBERPAGES);
-        attributeList.add(ATTR_PUBLISHERNAME);
-        attributeList.add(ATTR_PUBLISHERADDRESS);
-        attributeList.add(ATTR_PUBLISHERPHONE);
-        attributeList.add(ATTR_PUBLISHEREMAIL);
         String tableDisplayFormat = getTableFormatString(rs, attributeList);
         
         // print out header for table:
-        line(LINE_LENGTH*3);
-        System.out.printf(tableDisplayFormat, ATTR_PUBLISHERNAME, ATTR_PUBLISHERADDRESS, ATTR_PUBLISHERPHONE, ATTR_PUBLISHEREMAIL, ATTR_BOOKTITLE, ATTR_YEARPUBLISHED, ATTR_NUMBERPAGES, ATTR_GROUPNAME, ATTR_HEADWRITER, ATTR_YEARFORMED, ATTR_SUBJECT);
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
+        System.out.printf(tableDisplayFormat, ATTR_PUBLISHERNAME, ATTR_PUBLISHERADDRESS, ATTR_PUBLISHERPHONE, ATTR_PUBLISHEREMAIL, ATTR_GROUPNAME, ATTR_HEADWRITER, ATTR_YEARFORMED, ATTR_SUBJECT, ATTR_BOOKTITLE, ATTR_YEARPUBLISHED, ATTR_NUMBERPAGES);
+        lineFormat(tableDisplayFormat);
         
         // keeps track of the numOfRows in order to see if a row was even returned
         int numOfRows = 0; 
@@ -370,34 +468,33 @@ public static void listAllDataForSpecificPublisher(Connection conn, PreparedStat
         while (rs.next()) {
             numOfRows++;
             
-            // Retrieve by column name
-            String publishername = dispNull(rs.getString("publishername"));
-            String publisheraddress = dispNull(rs.getString("publisheraddress"));
-            String publisherphone = dispNull(rs.getString("publisherphone"));
-            String publisheremail = dispNull(rs.getString("publisheremail"));
-            String booktitle = dispNull(rs.getString("booktitle"));
-            String yearpublished = dispNull(Integer.toString(rs.getInt("yearpublished")));
-            String numberpages = dispNull(Integer.toString(rs.getInt("numberpages")));
-            String groupname = dispNull(rs.getString("groupname"));
-            String headwriter = dispNull(rs.getString("headwriter"));
-            String yearformed = dispNull(Integer.toString(rs.getInt("yearformed")));
-            String subject = dispNull(rs.getString("subject"));
+            // Retrieve by column name            
+            String publishername = dispNull(rs.getString(ATTR_PUBLISHERNAME));
+            String publisheraddress = dispNull(rs.getString(ATTR_PUBLISHERADDRESS));
+            String publisherphone = dispNull(rs.getString(ATTR_PUBLISHERPHONE));
+            String publisheremail = dispNull(rs.getString(ATTR_PUBLISHEREMAIL));
+            String groupname = dispNull(rs.getString(ATTR_GROUPNAME));
+            String headwriter = dispNull(rs.getString(ATTR_HEADWRITER));
+            String yearformed = dispNull(Integer.toString(rs.getInt(ATTR_YEARFORMED)));
+            String subject = dispNull(rs.getString(ATTR_SUBJECT));
+            String booktitle = dispNull(rs.getString(ATTR_BOOKTITLE));
+            String yearpublished = dispNull(Integer.toString(rs.getInt(ATTR_YEARPUBLISHED)));
+            String numberpages = dispNull(Integer.toString(rs.getInt(ATTR_NUMBERPAGES)));
             
-
             // Display values
-            System.out.printf(tableDisplayFormat, publishername, publisheraddress, publisherphone, publisheremail, booktitle, yearpublished, numberpages, groupname, headwriter, yearformed, subject);
+            System.out.printf(tableDisplayFormat, publishername, publisheraddress, publisherphone, publisheremail, groupname, headwriter, yearformed, subject, booktitle, yearpublished, numberpages);
         }
         if(numOfRows == 0) {
-            System.out.println(">>> No rows were returned for 'Publishers Named '= " + publishernameInput);
+            System.out.println(">>> No rows were returned for 'publishersNamed' = " + publishernameInput);
         }
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
         
         rs.close();
         pstmt.close();
-        
     }
-///////////// OPTION 5 /////////////
-public static void listAllBooks(Connection conn, Statement stmt) throws SQLException
+    
+    ////////// OPTION 5 //////////
+    public static void listAllBooks(Connection conn, Statement stmt) throws SQLException
     {
         // create query:
         String sql =  "SELECT * FROM Books";
@@ -407,33 +504,37 @@ public static void listAllBooks(Connection conn, Statement stmt) throws SQLExcep
         // creates the display format based on what attributes you add in the arraylist:
         ArrayList<String> attributeList = new ArrayList<String>();
         attributeList.add(ATTR_BOOKTITLE);
+        attributeList.add(ATTR_GROUPNAME);
+        attributeList.add(ATTR_PUBLISHERNAME);
         attributeList.add(ATTR_YEARPUBLISHED);
         attributeList.add(ATTR_NUMBERPAGES);
         String tableDisplayFormat = getTableFormatString(rs, attributeList);
         
         // prints attribute headers:
-        line(LINE_LENGTH*3);
-        System.out.printf(tableDisplayFormat, ATTR_BOOKTITLE, ATTR_YEARPUBLISHED, ATTR_NUMBERPAGES);
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
+        System.out.printf(tableDisplayFormat, ATTR_BOOKTITLE, ATTR_GROUPNAME, ATTR_PUBLISHERNAME, ATTR_YEARPUBLISHED, ATTR_NUMBERPAGES);
+        lineFormat(tableDisplayFormat);
 
         // iterates through the result set of the query in order to print the results
         while(rs.next())
         {
-            String bktt = dispNull(rs.getString(ATTR_BOOKTITLE));
-            String yrpb = dispNull(rs.getString(ATTR_YEARPUBLISHED));
-            String nupg = dispNull(rs.getString(ATTR_NUMBERPAGES));
+            String bookTitle = dispNull(rs.getString(ATTR_BOOKTITLE));
+            String groupName = dispNull(rs.getString(ATTR_GROUPNAME));
+            String publisherName = dispNull(rs.getString(ATTR_PUBLISHERNAME));
+            String year = dispNull(rs.getString(ATTR_YEARPUBLISHED));
+            String pages = dispNull(rs.getString(ATTR_NUMBERPAGES));
             
-            System.out.printf(tableDisplayFormat, bktt, yrpb, nupg);
+            System.out.printf(tableDisplayFormat, bookTitle, groupName, publisherName, year, pages);
         }
-        
+        lineFormat(tableDisplayFormat);
         rs.close();
         stmt.close();
     }
-/////////////////// OPTION 6 ////////////////
 
-public static void listAllDataForSpecificBook(Connection conn, PreparedStatement pstmt) throws SQLException
-{                
-        System.out.print(">>> Enter in a Book Title: ");
+    ////////// OPTION 6 //////////
+    public static void listAllDataForSpecificBook(Connection conn, PreparedStatement pstmt) throws SQLException
+    {                
+        System.out.print(">>> Enter in a bookTitle: ");
         String bookInput = in.nextLine();
         
         String sql = "SELECT * from Books natural join WritingGroups natural join Publishers where BookTitle = ?";
@@ -447,13 +548,13 @@ public static void listAllDataForSpecificBook(Connection conn, PreparedStatement
         
         // creates the display format based on what attributes you add in the arraylist:
         ArrayList<String> attributeList = new ArrayList<String>();
+        attributeList.add(ATTR_BOOKTITLE);
+        attributeList.add(ATTR_YEARPUBLISHED);
+        attributeList.add(ATTR_NUMBERPAGES);
         attributeList.add(ATTR_GROUPNAME);
         attributeList.add(ATTR_HEADWRITER);
         attributeList.add(ATTR_YEARFORMED);
         attributeList.add(ATTR_SUBJECT);
-        attributeList.add(ATTR_BOOKTITLE);
-        attributeList.add(ATTR_YEARPUBLISHED);
-        attributeList.add(ATTR_NUMBERPAGES);
         attributeList.add(ATTR_PUBLISHERNAME);
         attributeList.add(ATTR_PUBLISHERADDRESS);
         attributeList.add(ATTR_PUBLISHERPHONE);
@@ -461,9 +562,9 @@ public static void listAllDataForSpecificBook(Connection conn, PreparedStatement
         String tableDisplayFormat = getTableFormatString(rs, attributeList);
         
         // print out header for table:
-        line(LINE_LENGTH*3);
-        System.out.printf(tableDisplayFormat, ATTR_BOOKTITLE, ATTR_YEARPUBLISHED, ATTR_NUMBERPAGES, ATTR_GROUPNAME, ATTR_HEADWRITER, ATTR_YEARFORMED, ATTR_SUBJECT, ATTR_PUBLISHERNAME, ATTR_PUBLISHERADDRESS, ATTR_PUBLISHERPHONE, ATTR_PUBLISHEREMAIL);
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
+        System.out.printf(tableDisplayFormat, ATTR_BOOKTITLE, ATTR_YEARPUBLISHED, ATTR_NUMBERPAGES, ATTR_GROUPNAME, ATTR_HEADWRITER, ATTR_YEARFORMED, ATTR_SUBJECT,  ATTR_PUBLISHERNAME, ATTR_PUBLISHERADDRESS, ATTR_PUBLISHERPHONE, ATTR_PUBLISHEREMAIL);
+        lineFormat(tableDisplayFormat);
         
         // keeps track of the numOfRows in order to see if a row was even returned
         int numOfRows = 0; 
@@ -473,206 +574,188 @@ public static void listAllDataForSpecificBook(Connection conn, PreparedStatement
             numOfRows++;
             
             // Retrieve by column name
-            String publishername = dispNull(rs.getString("publishername"));
-            String publisheraddress = dispNull(rs.getString("publisheraddress"));
-            String publisherphone = dispNull(rs.getString("publisherphone"));
-            String publisheremail = dispNull(rs.getString("publisheremail"));
-            String booktitle = dispNull(rs.getString("booktitle"));
-            String yearpublished = dispNull(Integer.toString(rs.getInt("yearpublished")));
-            String numberpages = dispNull(Integer.toString(rs.getInt("numberpages")));
-            String groupname = dispNull(rs.getString("groupname"));
-            String headwriter = dispNull(rs.getString("headwriter"));
-            String yearformed = dispNull(Integer.toString(rs.getInt("yearformed")));
-            String subject = dispNull(rs.getString("subject"));
-            
+            String booktitle = dispNull(rs.getString(ATTR_BOOKTITLE));
+            String yearpublished = dispNull(Integer.toString(rs.getInt(ATTR_YEARPUBLISHED)));
+            String numberpages = dispNull(Integer.toString(rs.getInt(ATTR_NUMBERPAGES)));
+            String groupname = dispNull(rs.getString(ATTR_GROUPNAME));
+            String headwriter = dispNull(rs.getString(ATTR_HEADWRITER));
+            String yearformed = dispNull(Integer.toString(rs.getInt(ATTR_YEARFORMED)));
+            String subject = dispNull(rs.getString(ATTR_SUBJECT));
+            String publishername = dispNull(rs.getString(ATTR_PUBLISHERNAME));
+            String publisheraddress = dispNull(rs.getString(ATTR_PUBLISHERADDRESS));
+            String publisherphone = dispNull(rs.getString(ATTR_PUBLISHERPHONE));
+            String publisheremail = dispNull(rs.getString(ATTR_PUBLISHEREMAIL));
 
             // Display values
-            System.out.printf(tableDisplayFormat, booktitle, yearpublished, numberpages, groupname, headwriter, yearformed, subject, publishername, publisheraddress, publisherphone, publisheremail);
+            System.out.printf(tableDisplayFormat, booktitle, yearpublished, numberpages, groupname, headwriter, yearformed, subject,  publishername, publisheraddress, publisherphone, publisheremail);
         }
         if(numOfRows == 0) {
-            System.out.println(">>> No rows were returned for 'Publishers Named '= " + bookInput);
+            System.out.println(">>> No rows were returned for 'bookTitle'= " + bookInput);
         }
-        line(LINE_LENGTH*3);
+        lineFormat(tableDisplayFormat);
         
         rs.close();
         pstmt.close();
-        
-        // DO NOT CLOSE the connection here or inside other functions (user might want to do more queries)
-}
-
-/////////////////// OPTION 7 ////////////////
- public static void insertNewBook(Connection conn) throws SQLException {
-        PreparedStatement pstmt = null;
-        Scanner in = new Scanner(System.in);
-        
-        System.out.println("Enter The Group's Name: ");
-        String gname = in.nextLine();
-        
-        System.out.println("Enter The Book's Title: ");
-        String title = in.nextLine();
-        
-        System.out.println("Enter The Publisher's name: ");
-        String pname = in.nextLine();
-        
-        System.out.println("Enter The Year Published: ");
-        String year = in.nextLine();
-        
-        System.out.println("Enter the number of pages: ");
-        String pages = in.nextLine();
-        
-        String sql = "INSERT INTO Book (GroupName, BookTitle, PublisherName, YearPublished, NumberPages) values (?,?,?,?,?)";
-        try {
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, gname);
-            pstmt.setString(2, title);
-            pstmt.setString(3, pname);
-            pstmt.setString(4, year);
-            pstmt.setString(5, pages);
-            pstmt.execute();
-            
-        } catch (SQLException SE) {
-            System.out.println(SE.getMessage());
-      	} finally {
-            if (pstmt != null) 
-                pstmt.close();              
-        }
- }
- 
- //////////// OPTION 8 ///////////////////
-//  public static String insertNewPublisher(Connection conn) throws SQLException {
-//        PreparedStatement pstmt = null;
-//        ResultSet rs = null;
-//       
-//        Statement stmt = null;
-//        int count = 0;
-//        int count1 = 0;
-//        Scanner in = new Scanner(System.in);
-//        
-//        System.out.println("Enter a publisher name: ");
-//        String newPName = in.nextLine();
-//        
-//        System.out.println("Enter a publisher address: ");
-//        String addr = in.nextLine();
-//        
-//        System.out.println("Enter a publisher phone: ");
-//        String phone = in.nextLine();
-//        
-//        System.out.println("Enter the publisher email: ");
-//        String email = in.nextLine();
-//        
-//        String sql = "INSERT INTO Publisher (PublisherName, PublisherAddress, publisherPhone, PublisherEmail) values (?,?,?,?)";
-//        String sql2= "SELECT COUNT(*) AS TOTAL FROM Publisher";
-//        
-//        try {
-//            stmt = conn.createStatement();
-//            rs = stmt.executeQuery(sql2);
-//            
-//            while (rs.next())
-//                count = rs.getInt(1);
-//            pstmt = conn.prepareStatement(sql);
-//            
-//            pstmt.setString(1, newPName);
-//            pstmt.setString(2, addr);
-//            pstmt.setString(3, phone);
-//            pstmt.setString(4, email);
-//            pstmt.execute();
-//            
-//            while (rs.next())
-//                count1 = rs.getInt(1);
-//            
-//            rs = stmt.executeQuery(sql2);
-//            
-//            if(count != count1)
-//                count = -1;
-//        } catch (SQLException SE) {
-//            System.out.println(SE.getMessage());
-//      	} finally {
-//            if (pstmt != null) 
-//                pstmt.close();
-//            
-//            if (stmt != null)
-//                stmt.close();
-//            
-//            if(rs != null)
-//                rs.close();
-//            
-//            if(count == -1){
-//                System.out.println("New Publisher Added Successfully added!");
-//                return newPName;
-//            }
-//        }
-//        return null; 
-//  }
-//////// OPTION 9 //////////////
-   public static void removeBook(Connection conn) throws SQLException {
-        
-       boolean bookExists = false;
-        boolean wgExists = false;
-       
-        PreparedStatement pstmt = null;
-        String book;
-        String writer;
-        Statement stmt = null;
-        
-        Scanner in = new Scanner(System.in);
-        System.out.println("Name of Book that needs to be Thanos'd: ");
-        book = in.nextLine();
-        try {
-            stmt = conn.createStatement();
-            String sql = "SELECT BookTitle FROM Book";
-            
-            ResultSet rs = stmt.executeQuery(sql);
-            while (rs.next()){
-                String removeBook = rs.getString("BookTitle");
-                if (removeBook.equals (book)){
-                    bookExists = true;
-                }
-            }
-            if (bookExists == false){
-                 System.out.println("Book you entered does not exist in the Database.\n");
-            }
-            else {
-                System.out.println("Name of the Writing Group?");
-                writer = in.nextLine();
-                
-                String sql2 = "SELECT GroupName FROM Book WHERE GroupName = ?";
-                PreparedStatement stmt2 = conn.prepareStatement(sql2);
-                stmt2.setString(1, writer);
-                rs = stmt2.executeQuery();
-                
-                while (rs.next()){
-                    String removeWriter = rs.getString("GroupName");
-                    if (removeWriter.equals(writer)){
-                        wgExists = true;
-                    }
-                }
-                if (wgExists == false){
-                    System.out.println("Writing Group you entered does not exist in the Database.\n");
-                }
-                else {
-                    String rsql = "DELETE FROM Book WHERE BookTitle = ? AND GroupName = ?";
-                    pstmt = conn.prepareStatement(rsql);
-                    pstmt.setString(1, book);
-                    pstmt.setString(2, writer);
-                    pstmt.execute();
-                    System.out.println( "\n \nYour Book has been Thanos'd");
-                }
-            }
-        } catch (SQLException SE){
-            System.out.println(SE.getMessage());
-        } finally {
-        if(stmt != null)
-            stmt.close();
-        
-        if(pstmt != null)
-            pstmt.close();
-        }
-       // in.close();
     }
 
+    ////////// OPTION 7 //////////
+    public static boolean insertNewBook(Connection conn, PreparedStatement pstmt) throws SQLException {
+        boolean insertStatus = true;
+        
+        System.out.print("Enter the Book's Title: ");
+        String title = in.nextLine();
+        
+        System.out.print("Enter the Group's Name: ");
+        String gname = in.nextLine();
+        
+        System.out.print("Enter the Publisher's name: ");
+        String pname = in.nextLine();
+        
+        System.out.print("Enter the Year Published: ");
+        int year = in.nextInt();
+        in.nextLine(); // eats newline
 
-    
-    
+        System.out.print("Enter the number of pages: ");
+        int pages = in.nextInt();
+        in.nextLine(); // eats newline
+        
+        String sql = "INSERT INTO Books VALUES (?, ?, ?, ?, ?)";
+        pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, title);
+        pstmt.setString(2, gname);
+        pstmt.setString(3, pname);
+        pstmt.setInt(4, year);
+        pstmt.setInt(5, pages);
+        
+        try {
+            pstmt.executeUpdate();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            insertStatus = false;
+            System.out.println("!!! Sorry, your input data resulted in a CONSTRAINT VIOLATION.");
+            System.out.println("!!! Sorry, here are the specific error(s):");
+
+            if(bookExists(title, gname, conn)) {
+                System.out.println("--> [PK Constraint] bookTitle and groupName already exist in the database ");
+            }
+            if(!groupExists(gname, conn)){
+                System.out.println("--> [FK Constraint] GROUP NAME does not exist in the database ");
+            }
+            if(!publisherExists(pname, conn)){
+                System.out.println("--> [FK Constraint] PUBLISHER NAME does not exist in the database ");
+            }
+      	} 
+        
+        pstmt.close();
+        return insertStatus;
+    }
+ 
+    ////////// OPTION 8 //////////
+    public static boolean replacePublisher(Connection conn, PreparedStatement pstmt) throws SQLException{
+        
+        boolean insertStatus = true;
+        boolean replaceStatus = true;
+        
+        // gets inputs for a NEW publisher from the user:
+        System.out.print(">>> Enter in a NEW publisher name: ");
+        String nameInput = in.nextLine();
+        
+        System.out.print(">>> Enter in a NEW publisher address: ");
+        String addressInput = in.nextLine();
+        
+        System.out.print(">>> Enter in a NEW publisher phone: ");
+        String phoneInput = in.nextLine();
+        
+        System.out.print(">>> Enter in a NEW publisher email: ");
+        String emailInput = in.nextLine();
+        
+        // gets input for the old publisher to be replaced:
+        System.out.print(">>> Enter in the OLD publisher name to be replaced: ");
+        String oldpublishnameInput = in.nextLine();
+
+        if(publisherExists(oldpublishnameInput, conn)){
+            // INSERTS A NEW PUBLISHER IN WHILE HANDLING CONSTRAINT ERRORS:
+            String sqlInsert = "INSERT INTO Publishers VALUES (?, ?, ?, ?)";
+            pstmt = conn.prepareStatement(sqlInsert);
+            pstmt.setString(1, nameInput);
+            pstmt.setString(2, addressInput);
+            pstmt.setString(3, phoneInput);
+            pstmt.setString(4, emailInput);
+
+            try{
+                // execute the insert: 
+                pstmt.executeUpdate();
+            }
+            catch(SQLIntegrityConstraintViolationException e){
+                insertStatus = false;
+                replaceStatus = false;
+                System.out.println("!!! Sorry, your input data resulted in a CONSTRAINT VIOLATION.");
+                System.out.println("!!! [PK Constraint] PUBLISHER NAME already exists in the database");
+                // e.printStackTrace();
+            }
+            // reset the pstmt for the update:
+            pstmt.close();
+            
+            // if the insert was successful then we replace the old publisher with the new publisher:
+            if(insertStatus){
+                // REPLACES ALL
+                String sqlUpdate = "UPDATE Books SET publishername = ? WHERE publishername = ?";
+                pstmt = conn.prepareStatement(sqlUpdate);
+                pstmt.setString(1, nameInput);
+                pstmt.setString(2, oldpublishnameInput);
+
+                try{
+                    // execute the insert: 
+                    pstmt.executeUpdate();
+                }
+                catch(SQLIntegrityConstraintViolationException e){
+                    replaceStatus = false;
+                    // this try catch is unneccessary
+                    // because if the code executes the executeUpdate() in the above try block
+                    // then:
+                    // - we have already checked if the old publisher exists
+                    // - AND the insert of the new publisher was successful
+                    // - there are no more logical conditions that this update/replace should fail.
+                    // - only other case is potential asynchronous issues that but that is out of the scope of this class.
+                }
+                // clean environment:
+                pstmt.close();
+            }
+        }
+        else{
+            System.out.println("!!! Sorry, OLD publisherName = " + oldpublishnameInput + " does not exist in the DB.");
+            System.out.println("!!! Replace cancelled. Please try again!");
+        }
+        
+        return replaceStatus;
+    }
+    ////////// OPTION 9 //////////
+    public static boolean removeBook(Connection conn, PreparedStatement pstmt) throws SQLException {
+        
+        boolean removeStatus = false;
+        
+        // gets input from the user:
+        System.out.print(">>> Enter in a BOOK TITLE: ");
+        String booktitleInput = in.nextLine();
+        
+        System.out.print(">>> Enter in a GROUP NAME: ");
+        String groupnameInput = in.nextLine();
+        
+        if(bookExists(booktitleInput, groupnameInput, conn)){
+            removeStatus = true;
+            String sql = "DELETE from Books where booktitle = ? AND groupname = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, booktitleInput);
+            pstmt.setString(2, groupnameInput);
+            pstmt.executeUpdate();
+            pstmt.close();
+        }
+        else{
+            System.out.println("!!! Sorry, the combination of [bookTitle = " + booktitleInput + "] and [groupName = " + groupnameInput + "] does not exist in the database to delete.");
+        }
+        
+        return removeStatus;
+    }
+
     public static void main(String[] args) {
         line(LINE_LENGTH);
         System.out.print(">>> Name of the database: ");
@@ -694,7 +777,7 @@ public static void listAllDataForSpecificBook(Connection conn, PreparedStatement
             Class.forName("org.apache.derby.jdbc.ClientDriver");
 
             //STEP 3: Open a connection
-            System.out.println("Connecting to database...");
+            System.out.println(">>> Connecting to database...");
             conn = DriverManager.getConnection(DB_URL);
 
             //STEP 4: Execute a query
@@ -746,18 +829,18 @@ public static void listAllDataForSpecificBook(Connection conn, PreparedStatement
                         listAllDataForSpecificBook(conn, pstmt);
                         break;
                     case 7:
-//                        boolean insertSuccess = insertNewBook(conn, pstmt);
-//                        System.out.println("<<< Insert Complete: " + insertSuccess);
+                        boolean insertSuccess = insertNewBook(conn, pstmt);
+                        System.out.println("<<< Insert Complete: " + insertSuccess);
                         line(LINE_LENGTH);
                         break;
                     case 8:
-//                        boolean replaceSuccess = replacePublisher(conn, pstmt);
-//                        System.out.println("<<< Replace Complete: " + replaceSuccess);
+                        boolean replaceSuccess = replacePublisher(conn, pstmt);
+                        System.out.println("<<< Replace Complete: " + replaceSuccess);
                         line(LINE_LENGTH);
                         break;
                     case 9:
-//                        boolean deletionSuccess = removeBook(conn, pstmt);
-//                        System.out.println("<<< Deletion Complete: " + deletionSuccess);
+                        boolean deletionSuccess = removeBook(conn, pstmt);
+                        System.out.println("<<< Deletion Complete: " + deletionSuccess);
                         line(LINE_LENGTH);
                         break;
                     default:
@@ -766,7 +849,17 @@ public static void listAllDataForSpecificBook(Connection conn, PreparedStatement
                 if(choice != 0) displayContinueMessage();
             }
             conn.close();
-        } catch (SQLException se) {
+        } catch (SQLNonTransientConnectionException se) {
+            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.out.println(">>> Potential problems:");
+            System.out.println("--- DATABASE NOT FOUND: " + DBNAME);
+            System.out.println("--- Username incorrect: " + USER);
+            System.out.println("--- Password incorrect: " + PASS);
+            System.out.println(">>> SEE STACK TRACE FOR EXACT REASON");
+            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            se.printStackTrace();
+        }
+        catch (SQLException se) {
             //Handle errors for JDBC
             se.printStackTrace();
         } catch (Exception e) {
@@ -790,4 +883,4 @@ public static void listAllDataForSpecificBook(Connection conn, PreparedStatement
         }//end try
         System.out.println("Goodbye!");
     }//end main
-}//end FirstExample}
+}//end class
