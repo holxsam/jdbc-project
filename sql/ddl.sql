@@ -48,7 +48,8 @@ values
 ('Wiki Group',  'Vickie Peedea',    1995,   'information'),
 ('Wimpy Greg',  'Rodrick Rules',    2000,   'Comedy'),
 ('Old Bookies', 'Dr Wilcox',        1995,   'Fiction'),
-('Derpy',       'KidJRod',          1940,   'Fiction');
+('Derpy',       'KidJRod',          1940,   'Fiction'),
+('Fellowship',  'J.R.R Tolkien'     1934,   'Fiction');
 
 
 INSERT INTO Publishers(PublisherName, PublisherAddress, PublisherPhone, PublisherEmail)
@@ -58,7 +59,8 @@ values
 ('Bloomsbury',          '4221 Random Drive',    '425-100-1010',     'HagridRules@msn.com'),
 ('Literature',          '35 Learning Ave',      '213-345-6543',     'Literature@cool.com'),
 ('Salinger Books',      '1600 Salinger Blvd',   '800-588-2300',     'salinger@yahoo.com'),
-('Blue Creek Novels',   '436 Blue Creek Rd',    '911-119-1919',     'bluecreek@gmail.net');
+('Blue Creek Novels',   '436 Blue Creek Rd',    '911-119-1919',     'bluecreek@gmail.net'),
+('One Ring',            '1738 Hobbit Hole',     '714-024-9696',     'manyrings@sauron.org');
 
 
 INSERT INTO Books(BookTitle, GroupName, PublisherName, YearPublished, NumberPages)
@@ -71,7 +73,9 @@ values
 ('The Great Gatsby',                        'Old Bookies',  'Literature',           1995,   180),
 ('The Catcher in the Rye',                  'Old Bookies',  'Salinger Books',       1951,   277),
 ('Nine Stories',                            'Derpy',        'Salinger Books',       1953,   277),
-('To Kill a Mockingbird',                   'Derpy',        'Blue Creek Novels',    1960,   323);
+('To Kill a Mockingbird',                   'Derpy',        'Blue Creek Novels',    1960,   323),
+('The Lord of the Rings'                    'Fellowship'    'One Ring'              1954,   233),
+('The Hobbit'                               'Fellowship'    'One Ring'              1940,   500);
 
 
 
