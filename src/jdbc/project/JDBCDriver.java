@@ -1,8 +1,16 @@
-
+/**
+ * Project: JDBC
+ * Authors: 
+ *      Mohammad-Murtuza Bharoocha
+ *      Josue Rodriguez
+ *      Sam Alhaqab
+ * Class: CECS 323
+ */
 package jdbc.project;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.InputMismatchException;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -107,6 +115,9 @@ public class JDBCDriver {
         in.nextLine();
     }
     
+    /**
+     * Prints a menu for the user.
+     */
     public static void displayMenu(){
         line(LINE_LENGTH);
         System.out.println("    MAIN MENU");
@@ -611,14 +622,37 @@ public class JDBCDriver {
         System.out.print("Enter the Publisher's name: ");
         String pname = in.nextLine();
         
-        System.out.print("Enter the Year Published: ");
-        int year = in.nextInt();
-        in.nextLine(); // eats newline
-
-        System.out.print("Enter the number of pages: ");
-        int pages = in.nextInt();
-        in.nextLine(); // eats newline
+        int year;
+        int pages;
         
+        try{
+            System.out.print("Enter the Year Published: ");
+            year = in.nextInt();
+            in.nextLine(); // eats newline
+            if(year < 0){
+                System.out.println("!!! Year cannot be negative. Exiting... Please try again!");
+                return false;
+            }
+        }
+        catch (InputMismatchException e){
+            System.out.println("!!! Please enter in only integers for year published!");
+            in.nextLine();
+            return false;
+        }
+         
+        try{
+            System.out.print("Enter the number of pages: ");
+            pages = in.nextInt();
+            in.nextLine(); // eats newline
+        }
+        catch (InputMismatchException e){
+            System.out.println("!!! Please enter in only integers for number of pages!");
+            in.nextLine();
+            return false;
+        }
+        
+
+
         String sql = "INSERT INTO Books VALUES (?, ?, ?, ?, ?)";
         pstmt = conn.prepareStatement(sql);
         pstmt.setString(1, title);

@@ -84,5 +84,5 @@ values
 ('LOTR: Fellowship of the Ring',            'Fellowship',   'One Ring',             1954,   313),
 ('The Hobbit',                              'Fellowship',   'One Ring',             1940,   500),
 ('The Lord of the Rings: Two Towers',       'Fellowship',   'One Ring',             1954,   643),
-('LOTR: Return of the King ',               'Fellowship',   'One Ring',             1955,   423);
+('LOTR: Return of the King',                'Fellowship',   'One Ring',             1955,   423);
 
