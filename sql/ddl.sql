@@ -49,7 +49,7 @@ values
 ('Wimpy Greg',  'Rodrick Rules',    2000,   'Comedy'),
 ('Old Bookies', 'Dr Wilcox',        1995,   'Fiction'),
 ('Derpy',       'KidJRod',          1940,   'Fiction'),
-('Fellowship',  'J.R.R Tolkien'     1934,   'Fiction');
+('Fellowship',  'J.R.R Tolkien',    1934,   'Fiction');
 
 
 INSERT INTO Publishers(PublisherName, PublisherAddress, PublisherPhone, PublisherEmail)
@@ -67,17 +67,22 @@ INSERT INTO Books(BookTitle, GroupName, PublisherName, YearPublished, NumberPage
 values
 ('Harry Potter And The Sorcerers Stone',    'JK Authors',   'Bloomsbury',           1998,   309),
 ('Harry Potter And The Chamber of Secrets', 'JK Authors',   'Bloomsbury',           1999,   379),
-('Front Page',                              'Wiki Group',   'Wikipedia',            1999,   96),
+('Harry Potter And The Prisoner of Azkaban','JK Authors',   'Bloomsbury',           2000,   399),
+('Harry Potter And The Goblet of Fire',     'JK Authors',   'Bloomsbury',           2001,   429),
+('Harry Potter And The Half-Blood Prince',  'JK Authors',   'Amulet',               2002,   449),
+('Harry Potter And The Deathly Hallows',    'JK Authors',   'Amulet',               2003,   479),
+('Front Page',                              'Wiki Group',   'Wikipedia',            1999,   096),
 ('Dictionary',                              'Wiki Group',   'Wikipedia',            1999,   900),
-('Diary of a Wimpy Kid',                    'Wimpy Greg',   'Amulet',               2007,   109),
+('Diary of a Wimpy Kid: Wrecking Ball',     'Wimpy Greg',   'Amulet',               2007,   109),
+('Diary of a Wimpy Kid: Last Straw',        'Wimpy Greg',   'Amulet',               2008,   109),
+('Diary of a Wimpy Kid: Dog Days',          'Wimpy Greg',   'Amulet',               2009,   109),
 ('The Great Gatsby',                        'Old Bookies',  'Literature',           1995,   180),
 ('The Catcher in the Rye',                  'Old Bookies',  'Salinger Books',       1951,   277),
 ('Nine Stories',                            'Derpy',        'Salinger Books',       1953,   277),
 ('To Kill a Mockingbird',                   'Derpy',        'Blue Creek Novels',    1960,   323),
-('The Lord of the Rings'                    'Fellowship'    'One Ring'              1954,   233),
-('The Hobbit'                               'Fellowship'    'One Ring'              1940,   500);
-
-
-
-
+('Lord of the Flies',                       'Old Bookies',  'Salinger Books',       1990,   102),
+('LOTR: Fellowship of the Ring',            'Fellowship',   'One Ring',             1954,   313),
+('The Hobbit',                              'Fellowship',   'One Ring',             1940,   500),
+('The Lord of the Rings: Two Towers',       'Fellowship',   'One Ring',             1954,   643),
+('LOTR: Return of the King ',               'Fellowship',   'One Ring',             1955,   423);
 
